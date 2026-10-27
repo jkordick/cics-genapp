@@ -1,0 +1,35 @@
+name: GenApp tests
+
+# Compiles the COBOL programs in base/src with GnuCOBOL and runs the
+# off-mainframe tests in test/ (emulated CICS, PostgreSQL in place of Db2).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and run tests (Podman)
+        run: test/run.sh -v
+
+      - name: Write test summary
+        if: always()
+        run: python3 test/tools/junit_summary.py test/results/junit.xml >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: genapp-test-results
+          path: test/results/
+          if-no-files-found: ignore

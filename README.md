@@ -23,6 +23,11 @@ functions of the newer releases of CICS TS.
 The general insurance application is a working COBOL application that you can use to try out different features of CICS,
 including modernizing applications.
 
+### Off-mainframe tests ([test/](test/README.md))
+
+Compiles the GenApp COBOL programs with GnuCOBOL and runs automated tests against them on Linux, with emulated CICS commands
+and PostgreSQL in place of Db2. Run `test/run.sh` (needs Podman or Docker). The tests also run in GitHub Actions on every pull request.
+
 ## Possible Uses
 
 To test a variety of functions and components of CICS TS, using a typical application. GenApp can be used to modify an
