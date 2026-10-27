@@ -2,7 +2,7 @@
 # Run the GenApp off-mainframe tests in a container (Podman, or Docker).
 #
 #   test/run.sh                 build + run all tests
-#   test/run.sh -k motor        extra arguments are passed to pytest
+#   test/run.sh -k MOT          extra arguments are passed to pytest
 #   test/run.sh --shell         open a shell in the test container
 #   test/run.sh --setup-only    build image + programs, do not run tests
 #

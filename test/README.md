@@ -7,7 +7,7 @@ GitHub Actions.
 
 ```
 test/run.sh                 # build everything and run all tests (first run also builds the image)
-test/run.sh -k motor        # extra arguments go to pytest
+test/run.sh -k MOT          # only Motor tests (extra arguments go to pytest)
 test/run.sh --shell         # shell in the test container, programs built and DB ready
 test/run.sh --setup-only    # build only, no tests
 ```
