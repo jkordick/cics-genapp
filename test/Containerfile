@@ -1,0 +1,23 @@
+# GenApp local test environment: GnuCOBOL + PostgreSQL + pytest.
+# Stands in for CICS TS + Db2 so the business logic can be tested off-mainframe.
+FROM docker.io/library/ubuntu:24.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        gnucobol3 libcob4-dev gcc make \
+        libpq-dev postgresql postgresql-client \
+        python3 python3-pytest python3-psycopg \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PGDATA=/var/lib/postgresql/data \
+    PGHOST=/tmp \
+    PGUSER=genapp \
+    PGDATABASE=genapp \
+    PATH=/opt/pgbin:$PATH
+
+RUN ln -s /usr/lib/postgresql/*/bin /opt/pgbin \
+    && mkdir -p "$PGDATA" && chown postgres:postgres "$PGDATA" \
+    && su postgres -c "/opt/pgbin/initdb -D $PGDATA --auth=trust -U genapp" >/dev/null
+
+WORKDIR /genapp
