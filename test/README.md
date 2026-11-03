@@ -78,11 +78,6 @@ Add extra tests for anything specific to the new type.
 The harness runs GenApp as written, including a few quirks that also happen
 on the mainframe:
 
-- `LGUPDB01` sets return code `02` (timestamp mismatch) or `01` (not found)
-  and then resets it to `00` in `CLOSE-PCURSOR`. The data is correctly left
-  unchanged, but the caller sees `00` (and `01` ends in abend `LGV3`). The
-  tests that expect the correct codes are marked `xfail(strict=True)`. If
-  you fix the bug, remove the `GENAPP_UPDATE_RC_BUG` marker.
 - `LGUPOL01` sets `99` for an unknown request ID but still calls `LGUPDB01`.
 - `LGAPOL01` and `LGDPOL01` only check for the 28-byte COMMAREA header; the
   per-policy-type length check is in `LGAPDB01`.

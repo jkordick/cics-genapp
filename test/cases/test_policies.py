@@ -143,6 +143,7 @@ def test_update_policy(genapp, db, customer, ptype):
     assert r.abend is None, r.log
     assert r.return_code == "00"
     assert r.ca["CA-LASTCHANGED"] != before
+    assert "FILE REWR KSDSPOLY resp=0" in r.log
 
     assert db_row(db, ptype.table, policy, list(ptype.updated_columns)) == ptype.updated_columns
     after = inquire_policy(genapp, customer, ptype, policy)
@@ -168,32 +169,85 @@ def test_update_with_stale_timestamp_changes_nothing(genapp, db, customer, ptype
     assert r.abend is None, r.log
 
 
-# Known GenApp bug, reproduced faithfully by the harness: LGUPDB01 sets the
-# return code to '02' (timestamp mismatch) or '01' (policy not found), but the
-# CLOSE-PCURSOR paragraph it performs afterwards resets it to '00'. For '01'
-# LGUPVS01 then fails to read the VSAM record and abends with LGV3.
-# strict=True: once the bug is fixed these tests pass and pytest reports
-# XPASS as a failure, as a reminder to remove the xfail marker.
-GENAPP_UPDATE_RC_BUG = pytest.mark.xfail(
-    strict=True, reason="GenApp bug: LGUPDB01 CLOSE-PCURSOR overwrites CA-RETURN-CODE")
+# Trace line written when LGUPVS01 rewrites the policy's VSAM record. A failed
+# update must not reach LGUPVS01, even if the rewrite would not change any
+# bytes (Motor and Endowment updates only change columns not kept in VSAM).
+VSAM_REWRITE = "FILE REWR KSDSPOLY"
 
 
-@GENAPP_UPDATE_RC_BUG
+def policy_state(genapp, db, customer, ptype, policy):
+    """Everything an update can change: POLICY row, type-specific row, VSAM record."""
+    common = db.execute("SELECT * FROM policy WHERE policynumber = %s", (policy,)).fetchone()
+    specific = db.execute(f"SELECT * FROM {ptype.table} WHERE policynumber = %s",
+                          (policy,)).fetchone()
+    key = f"{ptype.vsam_type}{customer:010d}{policy:010d}"
+    return common, specific, genapp.vsam("KSDSPOLY", key)
+
+
 @pytest.mark.parametrize("ptype", [p for p in POLICY_TYPES if p.update], ids=str)
-def test_update_with_stale_timestamp_returns_02(genapp, customer, ptype):
+def test_update_with_stale_timestamp_returns_02(genapp, db, customer, ptype):
     policy = add_policy(genapp, customer, ptype).ca["CA-POLICY-NUM"]
     ca = inquire_policy(genapp, customer, ptype, policy).ca
     ca["CA-REQUEST-ID"] = f"01U{ptype.code}"
-    assert genapp.call("LGUPOL01", ca.copy()).return_code == "00"
-    assert genapp.call("LGUPOL01", ca).return_code == "02"
+    first = ca.copy()
+    for name, value in ptype.update.items():
+        first[name] = value
+    assert genapp.call("LGUPOL01", first).return_code == "00"
+    before = policy_state(genapp, db, customer, ptype, policy)
+
+    # ca still carries the old LASTCHANGED (and the old values).
+    r = genapp.call("LGUPOL01", ca)
+    assert r.abend is None, r.log
+    assert r.return_code == "02", r.log
+    assert policy_state(genapp, db, customer, ptype, policy) == before
+    assert VSAM_REWRITE not in r.log
 
 
-@GENAPP_UPDATE_RC_BUG
 @pytest.mark.parametrize("ptype", [p for p in POLICY_TYPES if p.update], ids=str)
 def test_update_unknown_policy_returns_01(genapp, customer, ptype):
     ca = genapp.commarea(request_id=f"01U{ptype.code}", customer_num=customer,
                          policy_num=9999999, **{**COMMON, **ptype.fields})
-    assert genapp.call("LGUPOL01", ca).return_code == "01"
+    r = genapp.call("LGUPOL01", ca)
+    assert r.abend is None, r.log
+    assert r.return_code == "01", r.log
+    assert VSAM_REWRITE not in r.log
+
+
+@pytest.mark.parametrize("ptype", [p for p in POLICY_TYPES if p.update], ids=str)
+def test_update_with_missing_type_specific_row_returns_01(genapp, db, customer, ptype):
+    policy = add_policy(genapp, customer, ptype).ca["CA-POLICY-NUM"]
+    ca = inquire_policy(genapp, customer, ptype, policy).ca
+    # The POLICY row exists, but the UPDATE of the type-specific table finds
+    # no row (SQLCODE 100).
+    db.execute(f"DELETE FROM {ptype.table} WHERE policynumber = %s", (policy,))
+    before = policy_state(genapp, db, customer, ptype, policy)
+
+    ca["CA-REQUEST-ID"] = f"01U{ptype.code}"
+    for name, value in ptype.update.items():
+        ca[name] = value
+    r = genapp.call("LGUPOL01", ca)
+    assert r.abend is None, r.log
+    assert r.return_code == "01", r.log
+    assert policy_state(genapp, db, customer, ptype, policy) == before
+    assert VSAM_REWRITE not in r.log
+
+
+def test_update_motor_with_sql_error_returns_90(genapp, db, customer):
+    ptype = next(p for p in POLICY_TYPES if p.code == "MOT")
+    policy = add_policy(genapp, customer, ptype).ca["CA-POLICY-NUM"]
+    ca = inquire_policy(genapp, customer, ptype, policy).ca
+    before = policy_state(genapp, db, customer, ptype, policy)
+    logged = len(genapp.queue("TD", "CSMT"))
+
+    # Not a valid date, so the UPDATE of the MOTOR table fails (SQLCODE < 0).
+    ca["CA-REQUEST-ID"] = "01UMOT"
+    ca["CA-M-MANUFACTURED"] = "2020-13-45"
+    r = genapp.call("LGUPOL01", ca)
+    assert r.abend is None, r.log
+    assert r.return_code == "90", r.log
+    assert policy_state(genapp, db, customer, ptype, policy) == before
+    assert VSAM_REWRITE not in r.log
+    assert any("UPDATE MOTOR" in line for line in genapp.queue("TD", "CSMT")[logged:])
 
 
 @pytest.mark.parametrize("ptype", [p for p in POLICY_TYPES if p.delete], ids=str)
