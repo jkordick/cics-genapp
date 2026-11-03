@@ -206,10 +206,13 @@
       *    Call procedure to update required tables
            PERFORM UPDATE-POLICY-DB2-INFO.
 
-           EXEC CICS LINK Program(LGUPVS01)
-                Commarea(DFHCOMMAREA)
-                LENGTH(225)
-           END-EXEC.
+      *    Only update the VSAM record if the DB2 update worked
+           IF CA-RETURN-CODE EQUAL '00'
+             EXEC CICS LINK Program(LGUPVS01)
+                  Commarea(DFHCOMMAREA)
+                  LENGTH(225)
+             END-EXEC
+           END-IF.
 
       * Return to caller
        END-PROGRAM.
@@ -366,11 +369,11 @@
              CLOSE POLICY_CURSOR
            END-EXEC.
 
+      *    Keep the return code already set (00, 01, 02 or 90)
            Evaluate SQLCODE
              When 0
-               MOVE '00' TO CA-RETURN-CODE
+               CONTINUE
              When -501
-               MOVE '00' TO CA-RETURN-CODE
                MOVE '-501 detected c' TO EM-SQLREQ
                EXEC CICS RETURN END-EXEC
              When Other

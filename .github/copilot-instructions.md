@@ -59,5 +59,5 @@ test/run.sh
   prefer the forms GenApp already uses. Only extend `test/tools/precompile.py`
   or `test/runtime/genapprt.c` if there is no reasonable alternative, and
   say so in the pull request.
-- `test/README.md` lists known GenApp quirks (tests marked
-  `xfail(strict=True)`). Don't treat those as harness bugs.
+- `test/README.md` lists known GenApp quirks. Don't treat those as harness
+  bugs.
