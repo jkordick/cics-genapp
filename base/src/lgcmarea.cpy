@@ -92,6 +92,17 @@
                  07 CA-B-Status          PIC 9(4).
                  07 CA-B-RejectReason    PIC X(255).
                  07 CA-B-FILLER          PIC X(31298).
+      *       Pet policy description
+              05 CA-PET REDEFINES CA-POLICY-SPECIFIC.
+                 07 CA-PT-NAME           PIC X(20).
+                 07 CA-PT-SPECIES        PIC X(10).
+                 07 CA-PT-BREED           PIC X(20).
+                 07 CA-PT-DOB             PIC X(10).
+                 07 CA-PT-MICROCHIP       PIC X(15).
+                 07 CA-PT-VALUE           PIC 9(6).
+                 07 CA-PT-VET-LIMIT       PIC 9(6).
+                 07 CA-PT-PREMIUM          PIC 9(6).
+                 07 CA-PT-FILLER          PIC X(32307).
       *       CLAIM policy description
               05 CA-CLAIM      REDEFINES CA-POLICY-SPECIFIC.
                  07 CA-C-Num             PIC 9(10).

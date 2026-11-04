@@ -6,7 +6,7 @@
       *                    Inquire Policy                              *
       *                                                                *
       *   To obtain full details of an individual policy:              *
-      *     Endowment, House, Motor, Commercial                        *
+      *     Endowment, House, Motor, Commercial, Pet                   *
       *                                                                *
       ******************************************************************
        IDENTIFICATION DIVISION.
@@ -179,6 +179,9 @@
            03 DB2-M-CC-SINT            PIC S9(4) COMP.
            03 DB2-M-PREMIUM-INT        PIC S9(9) COMP.
            03 DB2-M-ACCIDENTS-INT      PIC S9(9) COMP.
+           03 DB2-PET-VALUE-INT          PIC S9(9) COMP.
+           03 DB2-PET-VET-LIMIT-INT      PIC S9(9) COMP.
+           03 DB2-PET-PREMIUM-INT        PIC S9(9) COMP.
            03 DB2-B-FirePeril-Int      PIC S9(4) COMP.
            03 DB2-B-FirePremium-Int    PIC S9(9) COMP.
            03 DB2-B-CrimePeril-Int     PIC S9(4) COMP.
@@ -287,6 +290,10 @@
              WHEN '01IMOT'
                INITIALIZE DB2-MOTOR
                PERFORM GET-MOTOR-DB2-INFO
+
+             WHEN '01IPET'
+               INITIALIZE DB2-PET
+               PERFORM GET-PET-DB2-INFO
 
              WHEN '01ICOM'
                INITIALIZE DB2-COMMERCIAL
@@ -519,6 +526,83 @@
                PERFORM WRITE-ERROR-MESSAGE
              END-IF
 
+           END-IF.
+           EXIT.
+
+      *================================================================*
+      * Use Select on join of Policy and Pet tables to obtain a row    *
+      *================================================================*
+       GET-PET-DB2-INFO.
+
+           MOVE ' SELECT PET   ' TO EM-SQLREQ
+           EXEC SQL
+             SELECT  ISSUEDATE,
+                     EXPIRYDATE,
+                     LASTCHANGED,
+                     BROKERID,
+                     BROKERSREFERENCE,
+                     PAYMENT,
+                     PETNAME,
+                     SPECIES,
+                     BREED,
+                     DATEOFBIRTH,
+                     MICROCHIP,
+                     VALUE,
+                     VETFEELIMIT,
+                     PREMIUM
+             INTO  :DB2-ISSUEDATE,
+                   :DB2-EXPIRYDATE,
+                   :DB2-LASTCHANGED,
+                   :DB2-BROKERID-INT INDICATOR :IND-BROKERID,
+                   :DB2-BROKERSREF INDICATOR :IND-BROKERSREF,
+                   :DB2-PAYMENT-INT INDICATOR :IND-PAYMENT,
+                   :DB2-PET-NAME,
+                   :DB2-PET-SPECIES,
+                   :DB2-PET-BREED,
+                   :DB2-PET-DOB,
+                   :DB2-PET-MICROCHIP,
+                   :DB2-PET-VALUE-INT,
+                   :DB2-PET-VET-LIMIT-INT,
+                   :DB2-PET-PREMIUM-INT
+             FROM  POLICY,PET
+             WHERE ( POLICY.POLICYNUMBER =
+                        PET.POLICYNUMBER   AND
+                     POLICY.CUSTOMERNUMBER =
+                        :DB2-CUSTOMERNUM-INT             AND
+                     POLICY.POLICYNUMBER =
+                        :DB2-POLICYNUM-INT               )
+           END-EXEC
+
+           IF SQLCODE = 0
+             ADD WS-CA-HEADERTRAILER-LEN TO WS-REQUIRED-CA-LEN
+             ADD WS-FULL-PET-LEN         TO WS-REQUIRED-CA-LEN
+
+             IF EIBCALEN IS LESS THAN WS-REQUIRED-CA-LEN
+               MOVE '98' TO CA-RETURN-CODE
+               EXEC CICS RETURN END-EXEC
+             ELSE
+               IF IND-BROKERID NOT EQUAL MINUS-ONE
+                 MOVE DB2-BROKERID-INT TO DB2-BROKERID
+               END-IF
+               IF IND-PAYMENT NOT EQUAL MINUS-ONE
+                 MOVE DB2-PAYMENT-INT TO DB2-PAYMENT
+               END-IF
+               MOVE DB2-PET-VALUE-INT     TO DB2-PET-VALUE
+               MOVE DB2-PET-VET-LIMIT-INT TO DB2-PET-VET-LIMIT
+               MOVE DB2-PET-PREMIUM-INT   TO DB2-PET-PREMIUM
+
+               MOVE DB2-POLICY-COMMON TO CA-POLICY-COMMON
+               MOVE DB2-PET(1:WS-PET-LEN)
+                 TO CA-PET(1:WS-PET-LEN)
+               MOVE 'FINAL' TO CA-PT-FILLER(1:5)
+             END-IF
+           ELSE
+             IF SQLCODE EQUAL 100
+               MOVE '01' TO CA-RETURN-CODE
+             ELSE
+               MOVE '90' TO CA-RETURN-CODE
+               PERFORM WRITE-ERROR-MESSAGE
+             END-IF
            END-IF.
            EXIT.
 

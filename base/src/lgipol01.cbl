@@ -6,7 +6,7 @@
       *                                                                *
       *  Business logic for policy inquire                             *
       *   To obtain full details of an individual policy:              *
-      *     Endowment, House or Motor                                  *
+      *     Endowment, House, Motor or Pet                             *
       *                                                                *
       ******************************************************************
        IDENTIFICATION DIVISION.

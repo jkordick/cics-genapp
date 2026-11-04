@@ -19,11 +19,13 @@
            03 WS-ENDOW-LEN             PIC S9(4) COMP VALUE +52.
            03 WS-HOUSE-LEN             PIC S9(4) COMP VALUE +58.
            03 WS-MOTOR-LEN             PIC S9(4) COMP VALUE +65.
+           03 WS-PET-LEN               PIC S9(4) COMP VALUE +93.
            03 WS-COMM-LEN              PIC S9(4) COMP VALUE +1102.
            03 WS-CLAIM-LEN             PIC S9(4) COMP VALUE +546.
            03 WS-FULL-ENDOW-LEN        PIC S9(4) COMP VALUE +124.
            03 WS-FULL-HOUSE-LEN        PIC S9(4) COMP VALUE +130.
            03 WS-FULL-MOTOR-LEN        PIC S9(4) COMP VALUE +137.
+           03 WS-FULL-PET-LEN          PIC S9(4) COMP VALUE +165.
            03 WS-FULL-COMM-LEN         PIC S9(4) COMP VALUE +1174.
            03 WS-FULL-CLAIM-LEN        PIC S9(4) COMP VALUE +618.
            03 WS-SUMRY-ENDOW-LEN       PIC S9(4) COMP VALUE +25.
@@ -79,6 +81,16 @@
            03 DB2-M-MANUFACTURED       PIC X(10).
            03 DB2-M-PREMIUM            PIC 9(6).
            03 DB2-M-ACCIDENTS          PIC 9(6).
+
+       01  DB2-PET.
+           03 DB2-PET-NAME             PIC X(20).
+           03 DB2-PET-SPECIES          PIC X(10).
+           03 DB2-PET-BREED            PIC X(20).
+           03 DB2-PET-DOB              PIC X(10).
+           03 DB2-PET-MICROCHIP        PIC X(15).
+           03 DB2-PET-VALUE            PIC 9(6).
+           03 DB2-PET-VET-LIMIT        PIC 9(6).
+           03 DB2-PET-PREMIUM           PIC 9(6).
 
        01  DB2-COMMERCIAL.
            03 DB2-B-Address            PIC X(255).

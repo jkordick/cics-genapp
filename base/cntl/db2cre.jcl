@@ -293,6 +293,26 @@ CREATE UNIQUE INDEX <DB2DBID>.iMotor
    ON <DB2DBID>.motor (policyNumber) CLUSTER
    COPY YES ;
 
+CREATE TABLE <DB2DBID>.pet (
+     policyNumber   INTEGER NOT NULL,
+     petName        CHAR(20),
+     species        CHAR(10),
+     breed          CHAR(20),
+     dateOfBirth    DATE,
+     microchip      CHAR(15),
+     value          INTEGER,
+     vetFeeLimit    INTEGER,
+     premium        INTEGER,
+   PRIMARY KEY(policyNumber),
+   FOREIGN KEY(policyNumber)
+          REFERENCES <DB2DBID>.policy (policyNumber) ON DELETE CASCADE)
+   CCSID EBCDIC
+   IN <DB2DBID>.GENATS05;
+
+CREATE UNIQUE INDEX <DB2DBID>.iPet
+   ON <DB2DBID>.pet (policyNumber) CLUSTER
+   COPY YES ;
+
 /*
 //*
 //* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -402,6 +422,7 @@ CREATE UNIQUE INDEX <DB2DBID>.iClaim
   GRANT ALL PRIVILEGES ON TABLE <DB2DBID>.customer TO PUBLIC;
   GRANT ALL PRIVILEGES ON TABLE <DB2DBID>.policy   TO PUBLIC;
   GRANT ALL PRIVILEGES ON TABLE <DB2DBID>.motor    TO PUBLIC;
+  GRANT ALL PRIVILEGES ON TABLE <DB2DBID>.pet      TO PUBLIC;
   GRANT ALL PRIVILEGES ON TABLE <DB2DBID>.house    TO PUBLIC;
   GRANT ALL PRIVILEGES ON TABLE <DB2DBID>.endowment TO PUBLIC;
   GRANT ALL PRIVILEGES ON TABLE <DB2DBID>.commercial TO PUBLIC;

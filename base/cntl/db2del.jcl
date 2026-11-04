@@ -27,6 +27,7 @@
     DROP     TABLE      <DB2DBID>.house;
     DROP     TABLE      <DB2DBID>.endowment;
     DROP     TABLE      <DB2DBID>.motor;
+    DROP     TABLE      <DB2DBID>.pet;
     DROP     TABLE      <DB2DBID>.commercial;
     DROP     TABLE      <DB2DBID>.claim;
     DROP     TABLESPACE <DB2DBID>.GENATS00;
