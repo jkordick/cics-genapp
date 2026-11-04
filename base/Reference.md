@@ -121,3 +121,5 @@ The general insurance application provides sample data for the following policie
 | House      | 8             | 9               |
 | Commercial | 9             | 5               |
 | Commercial | 10            | 1               |
+
+Pet policies (type `P`) are supported for add and inquire operations; no pet policies are included in the sample data.

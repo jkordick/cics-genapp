@@ -6,7 +6,7 @@
       *                                                                *
       *  Add Policy business logic                                     *
       *   To add full details of an individual policy:                 *
-      *     Endowment, House, Motor, Commercial                        *
+      *     Endowment, House, Motor, Commercial, Pet                   *
       *                                                                *
       ******************************************************************
        IDENTIFICATION DIVISION.

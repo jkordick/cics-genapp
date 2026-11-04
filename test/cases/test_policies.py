@@ -7,6 +7,7 @@ that is parametrized over POLICY_TYPES then runs for it too. Set update={}
 and delete=False while the type does not support update / delete yet.
 """
 from dataclasses import dataclass
+from datetime import date
 
 import pytest
 
@@ -70,6 +71,18 @@ POLICY_TYPES = [
                         firepremium=100, weatherpremium=400),
         update={},           # GenApp has no update for commercial policies
         updated_columns={},
+    ),
+    PolicyType(
+        "PET", "P", "pet",
+        fields=dict(pt_name="Milo", pt_species="DOG", pt_breed="Border Collie",
+                    pt_dob="2021-06-15", pt_microchip="985112004123456",
+                    pt_value=1200, pt_vet_limit=5000, pt_premium=300),
+        db_columns=dict(petname="Milo", species="DOG", breed="Border Collie",
+                        dateofbirth=date(2021, 6, 15), microchip="985112004123456",
+                        value=1200, vetfeelimit=5000, premium=300),
+        update={},
+        updated_columns={},
+        delete=False,
     ),
 ]
 
